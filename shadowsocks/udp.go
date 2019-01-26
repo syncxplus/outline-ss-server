@@ -210,10 +210,10 @@ func (m *natmap) del(key string) net.PacketConn {
 func (m *natmap) Add(clientAddr net.Addr, clientConn net.PacketConn, cipher shadowaead.Cipher, targetConn net.PacketConn, clientLocation, keyID string) {
 	m.set(clientAddr.String(), targetConn)
 
-	m.metrics.AddUDPNatEntry()
+	//m.metrics.AddUDPNatEntry()
 	go func() {
 		timedCopy(clientAddr, clientConn, cipher, targetConn, m.timeout, clientLocation, keyID, m.metrics)
-		m.metrics.RemoveUDPNatEntry()
+		//m.metrics.RemoveUDPNatEntry()
 		if pc := m.del(clientAddr.String()); pc != nil {
 			pc.Close()
 		}

@@ -137,7 +137,7 @@ func proxyConnection(clientConn onet.DuplexConn, proxyMetrics *metrics.ProxyMetr
 	tgtTCPConn.SetKeepAlive(true)
 	tgtConn := metrics.MeasureConn(tgtTCPConn, &proxyMetrics.ProxyTarget, &proxyMetrics.TargetProxy)
 
-	logger.Debugf("proxy %s <-> %s", clientConn.RemoteAddr().String(), tgtConn.RemoteAddr().String())
+	logger.Debugf("proxy %s <-> %s, %s", clientConn.RemoteAddr().String(), tgtAddr.String(), tgtConn.RemoteAddr().String())
 	_, _, err = onet.Relay(clientConn, tgtConn)
 	if err != nil {
 		return onet.NewConnectionError("ERR_RELAY", "Failed to relay traffic", err)
@@ -162,8 +162,8 @@ func (s *tcpService) Start() {
 			if err != nil {
 				logger.Warningf("Failed location lookup: %v", err)
 			}
-			logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientConn.RemoteAddr().String())
-			s.m.AddOpenTCPConnection(clientLocation)
+			//logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientConn.RemoteAddr().String())
+			//s.m.AddOpenTCPConnection(clientLocation)
 			defer func() {
 				if r := recover(); r != nil {
 					logger.Errorf("Panic in TCP handler: %v", r)
@@ -173,7 +173,7 @@ func (s *tcpService) Start() {
 			clientConn.(*net.TCPConn).SetKeepAlive(true)
 			keyID := ""
 			var proxyMetrics metrics.ProxyMetrics
-			var timeToCipher time.Duration
+			//var timeToCipher time.Duration
 			clientConn = metrics.MeasureConn(clientConn, &proxyMetrics.ProxyClient, &proxyMetrics.ClientProxy)
 			defer func() {
 				connDuration := time.Now().Sub(connStart)
@@ -184,12 +184,15 @@ func (s *tcpService) Start() {
 					status = connError.Status
 				}
 				logger.Debugf("Done with status %v, duration %v", status, connDuration)
-				s.m.AddClosedTCPConnection(clientLocation, keyID, status, proxyMetrics, timeToCipher, connDuration)
+				//s.m.AddClosedTCPConnection(clientLocation, keyID, status, proxyMetrics, timeToCipher, connDuration)
 			}()
 
-			findStartTime := time.Now()
+			//findStartTime := time.Now()
 			keyID, clientConn, err := findAccessKey(clientConn, *s.ciphers)
-			timeToCipher = time.Now().Sub(findStartTime)
+			//timeToCipher = time.Now().Sub(findStartTime)
+
+			logger.Debugf("Connect from %v by key %v", clientConn.RemoteAddr().String(), keyID)
+			s.m.AddClient(clientLocation)
 
 			if err != nil {
 				return onet.NewConnectionError("ERR_CIPHER", "Failed to find a valid cipher", err)
