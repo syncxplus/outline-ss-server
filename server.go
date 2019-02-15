@@ -17,25 +17,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/Jigsaw-Code/outline-ss-server/api"
 	"github.com/Jigsaw-Code/outline-ss-server/metrics"
 	"github.com/Jigsaw-Code/outline-ss-server/shadowsocks"
 	"github.com/op/go-logging"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shadowsocks/go-shadowsocks2/core"
 	"github.com/shadowsocks/go-shadowsocks2/shadowaead"
 	"golang.org/x/crypto/ssh/terminal"
-	"gopkg.in/yaml.v2"
 )
 
 var logger *logging.Logger
@@ -102,7 +99,7 @@ func (s *SSServer) removePort(portNum int) error {
 }
 
 func (s *SSServer) loadConfig(filename string) error {
-	config, err := readConfig(filename)
+	config, err := api.ReadConfig(filename)
 	if err != nil {
 		return fmt.Errorf("Failed to read config file %v: %v", filename, err)
 	}
@@ -170,25 +167,6 @@ func runSSServer(filename string, natTimeout time.Duration, sm metrics.Shadowsoc
 	return nil
 }
 
-type Config struct {
-	Keys []struct {
-		ID     string
-		Port   int
-		Cipher string
-		Secret string
-	}
-}
-
-func readConfig(filename string) (*Config, error) {
-	config := Config{}
-	configData, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	err = yaml.Unmarshal(configData, &config)
-	return &config, err
-}
-
 func main() {
 	var flags struct {
 		ConfigFile  string
@@ -216,14 +194,6 @@ func main() {
 		return
 	}
 
-	if flags.MetricsAddr != "" {
-		http.Handle("/metrics", promhttp.Handler())
-		go func() {
-			logger.Fatal(http.ListenAndServe(flags.MetricsAddr, nil))
-		}()
-		logger.Infof("Metrics on http://%v/metrics", flags.MetricsAddr)
-	}
-
 	var ipCountryDB *geoip2.Reader
 	var err error
 	if flags.IPCountryDB != "" {
@@ -238,6 +208,8 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	logger.Fatal(api.Start(8080, flags.ConfigFile))
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
