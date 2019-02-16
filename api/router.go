@@ -75,9 +75,10 @@ func Start(port int, config string) error {
 		start := startPort(rate)
 		current := maxPort(rate, start, accounts)
 		for i :=0; i < count; i++ {
-			port := nextPort(start, current + i + 1)
+			port := nextPort(start, current)
 			newKeys[i] = create(strconv.Itoa(id + i + 1), port, rate)
 			accounts.Keys = append(accounts.Keys, newKeys[i])
+			current = port
 		}
 		data, _ := yaml.Marshal(accounts)
 		updateConfig(config, data)
