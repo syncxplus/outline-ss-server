@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"os"
 	"strconv"
 	"syscall"
 
@@ -12,7 +14,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const VERSION = "1.1.1"
+const (
+	version = "1.1.1"
+	cipher  = "chacha20-ietf-poly1305"
+
+	passwordLen = 6
+
+	acceptRate10 = "10"
+	acceptRate20 = "20"
+	acceptRate80 = "80"
+
+	portRange   = 1000
+	portDefault = 10000
+	portLimit10 = 11000
+	portLimit20 = 12000
+	portLimit80 = 18000
+)
 
 type accessKey struct {
 	ID        string `json:"id"`
@@ -40,7 +57,7 @@ func Start(port int, config string) error {
 	r := gin.Default()
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/version", func(c *gin.Context) {
-		c.String(200, VERSION)
+		c.String(http.StatusOK, version)
 	})
 	authorized := r.Group("/outline", gin.BasicAuth(gin.Accounts{
 		"user": "123456",
@@ -49,7 +66,7 @@ func Start(port int, config string) error {
 		switch c.Request.Method {
 		case "GET":
 			accounts, _ := ReadConfig(config)
-			c.JSON(200, resAccessKeys{
+			c.JSON(http.StatusOK, resAccessKeys{
 				accounts.Keys,
 				true,
 				len(accounts.Keys),
@@ -57,11 +74,11 @@ func Start(port int, config string) error {
 		case "DELETE":
 			data, _ := yaml.Marshal(Config{})
 			updateConfig(config, data)
-			c.JSON(200, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"status": true,
 			})
 		default:
-			c.JSON(501, gin.H{
+			c.JSON(http.StatusNotImplemented, gin.H{
 				"message": "Unsupported method" + c.Request.Method,
 			})
 		}
@@ -74,15 +91,15 @@ func Start(port int, config string) error {
 		id, _ := strconv.Atoi(maxId(accounts))
 		start := startPort(rate)
 		current := maxPort(rate, start, accounts)
-		for i :=0; i < count; i++ {
+		for i := 0; i < count; i++ {
 			port := nextPort(start, current)
-			newKeys[i] = create(strconv.Itoa(id + i + 1), port, rate)
+			newKeys[i] = create(strconv.Itoa(id+i+1), port, rate)
 			accounts.Keys = append(accounts.Keys, newKeys[i])
 			current = port
 		}
 		data, _ := yaml.Marshal(accounts)
 		updateConfig(config, data)
-		c.JSON(200, resAccessKeys{
+		c.JSON(http.StatusOK, resAccessKeys{
 			newKeys,
 			true,
 			len(newKeys),
@@ -101,8 +118,8 @@ func ReadConfig(filename string) (*Config, error) {
 	return &config, err
 }
 
-func updateConfig(file string, data []byte)  {
-	ioutil.WriteFile(file, data,0777)
+func updateConfig(file string, data []byte) {
+	ioutil.WriteFile(file, data, os.ModePerm)
 	err := syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
 	if err != nil {
 		fmt.Println(err)
@@ -114,9 +131,9 @@ func create(id string, port int, rate string) accessKey {
 	return accessKey{
 		id,
 		port,
-		"chacha20-ietf-poly1305",
+		cipher,
 		password,
-		"chacha20-ietf-poly1305",
+		cipher,
 		password,
 		rate,
 		"",
@@ -127,7 +144,7 @@ func create(id string, port int, rate string) accessKey {
 func maxId(config *Config) string {
 	size := len(config.Keys)
 	if size == 0 {
-		return "0"
+		return string(size)
 	} else {
 		return config.Keys[size-1].ID
 	}
@@ -135,14 +152,14 @@ func maxId(config *Config) string {
 
 func startPort(rate string) int {
 	switch rate {
-	case "10":
-		return 11000
-	case "20":
-		return 12000
-	case "80":
-		return 18000
+	case acceptRate10:
+		return portLimit10
+	case acceptRate20:
+		return portLimit20
+	case acceptRate80:
+		return portLimit80
 	default:
-		return 10000
+		return portDefault
 	}
 }
 
@@ -159,9 +176,8 @@ func maxPort(rate string, start int, config *Config) int {
 }
 
 func nextPort(start, current int) int {
-	const capacity = 1000
 	port := current + 1
-	if port >= (start + capacity) {
+	if port >= (start + portRange) {
 		port = start
 	}
 	return port
@@ -169,7 +185,7 @@ func nextPort(start, current int) int {
 
 func password() string {
 	c := []rune("abcdefghijklmnopqrstuvwxyz")
-	b := make([]rune, 6)
+	b := make([]rune, passwordLen)
 	for i := range b {
 		b[i] = c[rand.Intn(len(c))]
 	}
