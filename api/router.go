@@ -12,6 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const VERSION = "1.1.1"
+
 type accessKey struct {
 	ID        string `json:"id"`
 	Port      int    `json:"port"`
@@ -38,7 +40,7 @@ func Start(port int, config string) error {
 	r := gin.Default()
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/version", func(c *gin.Context) {
-		c.String(200, "1.1.1")
+		c.String(200, VERSION)
 	})
 	authorized := r.Group("/outline", gin.BasicAuth(gin.Accounts{
 		"user": "123456",
