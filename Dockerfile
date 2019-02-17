@@ -13,7 +13,7 @@ ENV GO111MODULE=on
 RUN go get -d -v ./... \
  && go install ./... \
  && mkdir /shadowbox \
- && echo "Keys: []" > /shadowbox/config.yml
+ && mv config.yml /shadowbox/config.yml
 
 ENV GIN_MODE=release
 

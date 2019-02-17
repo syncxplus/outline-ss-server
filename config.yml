@@ -1,0 +1,10 @@
+keys:
+  - id: "0"
+    port: 10000
+    cipher: chacha20-ietf-poly1305
+    secret: shadowbox
+    method: chacha20-ietf-poly1305
+    password: shadowbox
+    rate: "0"
+    name: ""
+    accessurl: ""
