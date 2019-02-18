@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	version = "1.1.1"
+	version = "1.1.2"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6
@@ -72,8 +72,6 @@ func Start(config string) error {
 				len(accounts.Keys),
 			})
 		case "DELETE":
-			data, _ := yaml.Marshal(Config{})
-			updateConfig(config, data)
 			c.JSON(http.StatusOK, gin.H{
 				"status": true,
 			})
