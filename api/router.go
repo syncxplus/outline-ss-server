@@ -43,6 +43,10 @@ type accessKey struct {
 	AccessUrl string `json:"accessUrl"`
 }
 
+type delKey struct {
+	ID int `json:"id"`
+}
+
 type Config struct {
 	Keys []accessKey
 }
@@ -72,6 +76,28 @@ func Start(config string) error {
 				len(accounts.Keys),
 			})
 		case "DELETE":
+			var keys []delKey
+			err := c.ShouldBindJSON(&keys)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("DELETE request: %v\n", keys)
+				if len(keys) > 0 {
+					accounts, _ := ReadConfig(config)
+					for _, d := range keys {
+						for k, v := range accounts.Keys {
+							vId, _ := strconv.Atoi(v.ID)
+							if d.ID == vId {
+								fmt.Println("delete key " + v.ID)
+								accounts.Keys = append(accounts.Keys[:k], accounts.Keys[k+1:]...)
+								break
+							}
+						}
+					}
+					data, _ := yaml.Marshal(accounts)
+					updateConfig(config, data)
+				}
+			}
 			c.JSON(http.StatusOK, gin.H{
 				"status": true,
 			})
@@ -117,10 +143,14 @@ func ReadConfig(filename string) (*Config, error) {
 }
 
 func updateConfig(file string, data []byte) {
-	ioutil.WriteFile(file, data, os.ModePerm)
-	err := syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+	err := ioutil.WriteFile(file, data, os.ModePerm)
 	if err != nil {
 		fmt.Println(err)
+	} else {
+		err = syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
