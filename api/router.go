@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/op/go-logging"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v2"
 )
@@ -57,6 +57,12 @@ type resAccessKeys struct {
 	Length     int         `json:"length"`
 }
 
+var logger *logging.Logger
+
+func init() {
+	logger = logging.MustGetLogger("")
+}
+
 func Start(config string) error {
 	r := gin.Default()
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -79,16 +85,16 @@ func Start(config string) error {
 			var keys []delKey
 			err := c.ShouldBindJSON(&keys)
 			if err != nil {
-				fmt.Println(err)
+				logger.Error("DELETE error:", err)
 			} else {
-				fmt.Printf("DELETE request: %v\n", keys)
+				logger.Info("DELETE request:", keys)
 				if len(keys) > 0 {
 					accounts, _ := ReadConfig(config)
 					for _, d := range keys {
 						for k, v := range accounts.Keys {
 							vId, _ := strconv.Atoi(v.ID)
 							if d.ID == vId {
-								fmt.Println("delete key " + v.ID)
+								logger.Info("DELETE accessKey:", vId)
 								accounts.Keys = append(accounts.Keys[:k], accounts.Keys[k+1:]...)
 								break
 							}
@@ -145,12 +151,12 @@ func ReadConfig(filename string) (*Config, error) {
 func updateConfig(file string, data []byte) {
 	err := ioutil.WriteFile(file, data, os.ModePerm)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		err = syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
-		if err != nil {
-			fmt.Println(err)
-		}
+		logger.Error("Failed to save config:", err)
+		return
+	}
+	err = syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
+	if err != nil {
+		logger.Error("Failed to reload config:", err)
 	}
 }
 
