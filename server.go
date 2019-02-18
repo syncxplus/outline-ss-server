@@ -209,7 +209,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logger.Fatal(api.Start(8080, flags.ConfigFile))
+	logger.Fatal(api.Start(flags.ConfigFile))
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

@@ -44,16 +44,16 @@ type accessKey struct {
 }
 
 type Config struct {
-	Keys [] accessKey
+	Keys []accessKey
 }
 
 type resAccessKeys struct {
-	AccessKeys [] accessKey `json:"accessKeys"`
-	Status     bool         `json:"status"`
-	Length     int          `json:"length"`
+	AccessKeys []accessKey `json:"accessKeys"`
+	Status     bool        `json:"status"`
+	Length     int         `json:"length"`
 }
 
-func Start(port int, config string) error {
+func Start(config string) error {
 	r := gin.Default()
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/version", func(c *gin.Context) {
@@ -105,7 +105,7 @@ func Start(port int, config string) error {
 			len(newKeys),
 		})
 	})
-	return r.Run(":" + strconv.Itoa(port))
+	return r.Run()
 }
 
 func ReadConfig(filename string) (*Config, error) {
