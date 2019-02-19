@@ -1,0 +1,15 @@
+{
+  "inbounds": [{
+    "port": 1024,
+    "protocol": "shadowsocks",
+    "settings": {
+        "method": "chacha20-ietf-poly1305",
+        "password": "shadowbox123",
+        "network": "tcp,udp"
+      }
+  }],
+  "outbounds": [{
+    "protocol": "freedom",
+    "settings": {}
+  }]
+}

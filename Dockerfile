@@ -2,7 +2,7 @@ FROM golang:1.11.5-alpine3.9
 
 LABEL maintainer="jibo@outlook.com"
 
-RUN apk add --no-cache bash gcc git musl-dev
+RUN apk add --no-cache bash curl gcc git musl-dev
 
 WORKDIR /go/src/app
 
@@ -13,7 +13,7 @@ ENV GO111MODULE=on
 RUN go get -d -v ./... \
  && go install ./... \
  && mkdir /shadowbox \
- && mv config.yml /shadowbox/config.yml
+ && curl -sL https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/scripts/config.yml -o /shadowbox/config.yml
 
 ENV GIN_MODE=release
 
