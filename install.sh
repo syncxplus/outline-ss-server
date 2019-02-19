@@ -2,7 +2,7 @@
 
 [[ ! -d "${PWD}/shadowbox" ]] && mkdir ${PWD}/shadowbox
 [[ ! -f "${PWD}/shadowbox/config.yml" ]] && {
-  curl -kL https://raw.githubusercontent.com/syncxplus/outline-ss-server/v1.0.4/config.yml -o ${PWD}/shadowbox/config.yml
+  curl -kL https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/config.yml -o ${PWD}/shadowbox/config.yml
 }
 
 VERSION=1.1.2
