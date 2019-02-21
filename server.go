@@ -174,12 +174,16 @@ func main() {
 		IPCountryDB string
 		Verbose     bool
 		natTimeout  time.Duration
+		certFile    string
+		keyFile     string
 	}
 	flag.StringVar(&flags.ConfigFile, "config", "", "Configuration filename")
 	flag.StringVar(&flags.MetricsAddr, "metrics", "", "Address for the Prometheus metrics")
 	flag.StringVar(&flags.IPCountryDB, "ip_country_db", "", "Path to the GeoLite2-Country.mmdb file")
 	flag.DurationVar(&flags.natTimeout, "udptimeout", 5*time.Minute, "UDP tunnel timeout")
 	flag.BoolVar(&flags.Verbose, "verbose", false, "Enables verbose logging output")
+	flag.StringVar(&flags.certFile, "cert", "", "TLS cert filename")
+	flag.StringVar(&flags.keyFile, "key", "", "TLS key filename")
 
 	flag.Parse()
 
@@ -191,6 +195,12 @@ func main() {
 
 	if flags.ConfigFile == "" {
 		flag.Usage()
+		return
+	}
+
+	if (flags.certFile == "" || flags.keyFile == "") && (flags.certFile+flags.keyFile) != "" {
+		flag.Usage()
+		fmt.Println("Note: cert and key must be provided or ignored at the same")
 		return
 	}
 
@@ -209,7 +219,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logger.Fatal(api.Start(flags.ConfigFile))
+	logger.Fatal(api.Start(flags.ConfigFile, flags.certFile, flags.keyFile))
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)

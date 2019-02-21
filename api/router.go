@@ -63,7 +63,7 @@ func init() {
 	logger = logging.MustGetLogger("")
 }
 
-func Start(config string) error {
+func Start(config, cert, key string) error {
 	r := gin.Default()
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/version", func(c *gin.Context) {
@@ -109,7 +109,7 @@ func Start(config string) error {
 			})
 		default:
 			c.JSON(http.StatusNotImplemented, gin.H{
-				"message": "Unsupported method" + c.Request.Method,
+				"message": "Unsupported " + c.Request.Method + " /outline",
 			})
 		}
 	})
@@ -135,7 +135,11 @@ func Start(config string) error {
 			len(newKeys),
 		})
 	})
-	return r.Run()
+	if (cert + key) == "" {
+		return r.Run()
+	} else {
+		return r.RunTLS("", cert, key)
+	}
 }
 
 func ReadConfig(filename string) (*Config, error) {
