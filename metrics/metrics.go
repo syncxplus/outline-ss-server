@@ -134,13 +134,13 @@ func NewShadowsocksMetrics(ipCountryDB *geoip2.Reader) ShadowsocksMetrics {
 				Name:      "client_gauge",
 				Help:      "Count of active clients",
 			}),
-		prevClients: make(map[string]int),
+		prevClients:    make(map[string]int),
 		currentClients: make(map[string]int),
 	}
 	// TODO: Is it possible to pass where to register the collectors?
 	prometheus.MustRegister(m.accessKeys, m.ports, m.clientGauge)
 	// Count active client every 5m
-	c := cron.New();
+	c := cron.New()
 	_ = c.AddFunc("0 */5 * * * *", func() {
 		for k, v := range m.prevClients {
 			if m.currentClients[k] == v {
@@ -234,7 +234,7 @@ func (m *shadowsocksMetrics) RemoveUDPNatEntry() {
 }
 
 func (m *shadowsocksMetrics) AddClient(clientLocation string) {
-	m.currentClients[clientLocation] += 1;
+	m.currentClients[clientLocation] += 1
 }
 
 type ProxyMetrics struct {
