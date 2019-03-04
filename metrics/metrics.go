@@ -18,10 +18,11 @@ import (
 	"errors"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	onet "github.com/Jigsaw-Code/outline-ss-server/net"
-	geoip2 "github.com/oschwald/geoip2-golang"
+	"github.com/oschwald/geoip2-golang"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/robfig/cron"
@@ -64,7 +65,7 @@ type shadowsocksMetrics struct {
 	udpRemovedNatEntries prometheus.Counter
 
 	prevClients    map[string]int
-	currentClients map[string]int
+	currentClients sync.Map
 	clientGauge    prometheus.Gauge
 }
 
@@ -134,8 +135,7 @@ func NewShadowsocksMetrics(ipCountryDB *geoip2.Reader) ShadowsocksMetrics {
 				Name:      "client_gauge",
 				Help:      "Count of active clients",
 			}),
-		prevClients:    make(map[string]int),
-		currentClients: make(map[string]int),
+		prevClients: make(map[string]int),
 	}
 	// TODO: Is it possible to pass where to register the collectors?
 	prometheus.MustRegister(m.accessKeys, m.ports, m.clientGauge)
@@ -143,15 +143,19 @@ func NewShadowsocksMetrics(ipCountryDB *geoip2.Reader) ShadowsocksMetrics {
 	c := cron.New()
 	_ = c.AddFunc("0 */5 * * * *", func() {
 		for k, v := range m.prevClients {
-			if m.currentClients[k] == v {
-				delete(m.currentClients, k)
+			c, _ := m.currentClients.Load(k)
+			if c == v {
+				m.currentClients.Delete(k)
 			}
 			delete(m.prevClients, k)
 		}
-		m.clientGauge.Set(float64(len(m.currentClients)))
-		for k, v := range m.currentClients {
-			m.prevClients[k] = v
-		}
+		var count float64
+		m.currentClients.Range(func(k, v interface{}) bool {
+			count++
+			m.prevClients[k.(string)] = v.(int)
+			return true
+		})
+		m.clientGauge.Set(count)
 	})
 	c.Start()
 	return m
@@ -234,7 +238,12 @@ func (m *shadowsocksMetrics) RemoveUDPNatEntry() {
 }
 
 func (m *shadowsocksMetrics) AddClient(clientLocation string) {
-	m.currentClients[clientLocation] += 1
+	c, ok := m.currentClients.Load(clientLocation)
+	if ok {
+		m.currentClients.Store(clientLocation, c.(int)+1)
+	} else {
+		m.currentClients.Store(clientLocation, 1)
+	}
 }
 
 type ProxyMetrics struct {
