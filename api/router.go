@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	version = "1.1.3"
+	version = "1.1.4"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6
@@ -30,6 +31,10 @@ const (
 	portLimit20 = 12000
 	portLimit80 = 18000
 )
+
+func init()  {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type accessKey struct {
 	ID        string `json:"id"`
