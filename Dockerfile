@@ -1,4 +1,4 @@
-FROM golang:1.11.5-alpine3.9
+FROM golang:1.12.0-alpine3.9
 
 LABEL maintainer="jibo@outlook.com"
 
