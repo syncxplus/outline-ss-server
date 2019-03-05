@@ -48,9 +48,9 @@ type accessKey struct {
 	AccessUrl string `json:"accessUrl"`
 }
 
-type delKey struct {
+/*type delKey struct {
 	ID int `json:"id"`
-}
+}*/
 
 type Config struct {
 	Keys []accessKey
@@ -87,7 +87,7 @@ func Start(config, cert, key string) error {
 				len(accounts.Keys),
 			})
 		case "DELETE":
-			var keys []delKey
+			/*var keys []delKey
 			err := c.ShouldBindJSON(&keys)
 			if err != nil {
 				logger.Error("DELETE error:", err)
@@ -108,7 +108,7 @@ func Start(config, cert, key string) error {
 					data, _ := yaml.Marshal(accounts)
 					updateConfig(config, data)
 				}
-			}
+			}*/
 			c.JSON(http.StatusOK, gin.H{
 				"status": true,
 			})
