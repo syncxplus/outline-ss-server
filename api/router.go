@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version = "1.1.4"
+	version = "1.1.5"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6
@@ -32,7 +32,7 @@ const (
 	portLimit80 = 18000
 )
 
-func init()  {
+func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -141,8 +141,11 @@ func Start(config, cert, key string) error {
 		})
 	})
 	if (cert + key) == "" {
+		logger.Info("Start api in 8080")
 		return r.Run()
 	} else {
+		go r.Run()
+		logger.Infof("Start api with tls mode")
 		return r.RunTLS("", cert, key)
 	}
 }
