@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version = "1.1.5"
+	version = "1.1.6"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6
@@ -31,10 +31,6 @@ const (
 	portLimit20 = 12000
 	portLimit80 = 18000
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 type accessKey struct {
 	ID        string `json:"id"`
@@ -62,10 +58,10 @@ type resAccessKeys struct {
 	Length     int         `json:"length"`
 }
 
-var logger *logging.Logger
+var logger = logging.MustGetLogger("api")
 
 func init() {
-	logger = logging.MustGetLogger("")
+	rand.Seed(time.Now().UnixNano())
 }
 
 func Start(config, cert, key string) error {

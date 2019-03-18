@@ -26,4 +26,4 @@ KEY=${DATA_DIR}/key
 
 docker ps -a | grep shadowbox | awk '{print $1}' | xargs -I {} docker rm -f -v {}
 
-docker run --name shadowbox --restart always -d --net host -v ${DATA_DIR}:/shadowbox syncxplus/shadowbox2:1.1.5
+docker run --name shadowbox --restart always -d --net host -v ${DATA_DIR}:/shadowbox syncxplus/shadowbox2:1.1.6

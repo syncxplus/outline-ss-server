@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime/debug"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -170,17 +171,18 @@ func (s *tcpService) Start() {
 			defer func() {
 				if r := recover(); r != nil {
 					logger.Errorf("Panic in TCP handler: %v", r)
+					logger.Warningf("%s -> %s", clientConn.RemoteAddr().String(), clientConn.LocalAddr().String())
+					logger.Warning(string(debug.Stack()))
 				}
 			}()
 			connStart := time.Now()
 			clientConn.(*net.TCPConn).SetKeepAlive(true)
-			keyID := ""
 			var proxyMetrics metrics.ProxyMetrics
 			//var timeToCipher time.Duration
 			clientConn = metrics.MeasureConn(clientConn, &proxyMetrics.ProxyClient, &proxyMetrics.ClientProxy)
 			defer func() {
+				_ = clientConn.Close()
 				connDuration := time.Now().Sub(connStart)
-				clientConn.Close()
 				status := "OK"
 				if connError != nil {
 					logger.Debugf("TCP Error: %v: %v", connError.Message, connError.Cause)
@@ -191,14 +193,13 @@ func (s *tcpService) Start() {
 			}()
 
 			//findStartTime := time.Now()
-			keyID, clientConn, err := findAccessKey(clientConn, *s.ciphers)
+			_, clientConn, err := findAccessKey(clientConn, *s.ciphers)
 			//timeToCipher = time.Now().Sub(findStartTime)
-
-			logger.Debugf("Connect from %v by key %v", clientConn.RemoteAddr().String(), keyID)
-			s.m.AddClient(clientLocation)
 
 			if err != nil {
 				return onet.NewConnectionError("ERR_CIPHER", "Failed to find a valid cipher", err)
+			} else {
+				s.m.AddClient(clientLocation)
 			}
 
 			return proxyConnection(clientConn, &proxyMetrics)
