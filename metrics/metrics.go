@@ -138,7 +138,8 @@ func NewShadowsocksMetrics(ipCountryDB *geoip2.Reader) ShadowsocksMetrics {
 		prevClients: make(map[string]int),
 	}
 	// TODO: Is it possible to pass where to register the collectors?
-	prometheus.MustRegister(m.accessKeys, m.ports, m.clientGauge)
+	prometheus.MustRegister(m.accessKeys, m.ports, m.tcpOpenConnections, m.tcpClosedConnections, m.tcpConnectionDurationMs,
+		m.dataBytes, m.timeToCipherMs, m.udpAddedNatEntries, m.udpRemovedNatEntries, m.clientGauge)
 	// Count active client every 5m
 	c := cron.New()
 	_ = c.AddFunc("0 */5 * * * *", func() {
@@ -219,14 +220,14 @@ func (m *shadowsocksMetrics) AddClosedTCPConnection(clientLocation, accessKey, s
 }
 
 func (m *shadowsocksMetrics) AddUDPPacketFromClient(clientLocation, accessKey, status string, clientProxyBytes, proxyTargetBytes int, timeToCipher time.Duration) {
-	//m.timeToCipherMs.WithLabelValues("udp", clientLocation, accessKey).Observe(timeToCipher.Seconds() * 1000)
-	//m.dataBytes.WithLabelValues("c>p", "udp", clientLocation, status, accessKey).Add(float64(clientProxyBytes))
-	//m.dataBytes.WithLabelValues("p>t", "udp", clientLocation, status, accessKey).Add(float64(proxyTargetBytes))
+	m.timeToCipherMs.WithLabelValues("udp", clientLocation, accessKey).Observe(timeToCipher.Seconds() * 1000)
+	m.dataBytes.WithLabelValues("c>p", "udp", clientLocation, status, accessKey).Add(float64(clientProxyBytes))
+	m.dataBytes.WithLabelValues("p>t", "udp", clientLocation, status, accessKey).Add(float64(proxyTargetBytes))
 }
 
 func (m *shadowsocksMetrics) AddUDPPacketFromTarget(clientLocation, accessKey, status string, targetProxyBytes, proxyClientBytes int) {
-	//m.dataBytes.WithLabelValues("p<t", "udp", clientLocation, status, accessKey).Add(float64(targetProxyBytes))
-	//m.dataBytes.WithLabelValues("c<p", "udp", clientLocation, status, accessKey).Add(float64(proxyClientBytes))
+	m.dataBytes.WithLabelValues("p<t", "udp", clientLocation, status, accessKey).Add(float64(targetProxyBytes))
+	m.dataBytes.WithLabelValues("c<p", "udp", clientLocation, status, accessKey).Add(float64(proxyClientBytes))
 }
 
 func (m *shadowsocksMetrics) AddUDPNatEntry() {

@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version = "1.1.6"
+	version = "1.1.7"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6

@@ -166,8 +166,8 @@ func (s *tcpService) Start() {
 			if err != nil {
 				logger.Warningf("Failed location lookup: %v", err)
 			}
-			//logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientConn.RemoteAddr().String())
-			//s.m.AddOpenTCPConnection(clientLocation)
+			logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientConn.RemoteAddr().String())
+			s.m.AddOpenTCPConnection(clientLocation)
 			defer func() {
 				if r := recover(); r != nil {
 					logger.Errorf("Panic in TCP handler: %v", r)
@@ -177,8 +177,9 @@ func (s *tcpService) Start() {
 			}()
 			connStart := time.Now()
 			clientConn.(*net.TCPConn).SetKeepAlive(true)
+			keyID := ""
 			var proxyMetrics metrics.ProxyMetrics
-			//var timeToCipher time.Duration
+			var timeToCipher time.Duration
 			clientConn = metrics.MeasureConn(clientConn, &proxyMetrics.ProxyClient, &proxyMetrics.ClientProxy)
 			defer func() {
 				_ = clientConn.Close()
@@ -189,12 +190,12 @@ func (s *tcpService) Start() {
 					status = connError.Status
 				}
 				logger.Debugf("Done with status %v, duration %v", status, connDuration)
-				//s.m.AddClosedTCPConnection(clientLocation, keyID, status, proxyMetrics, timeToCipher, connDuration)
+				s.m.AddClosedTCPConnection(clientLocation, keyID, status, proxyMetrics, timeToCipher, connDuration)
 			}()
 
-			//findStartTime := time.Now()
-			_, clientConn, err := findAccessKey(clientConn, *s.ciphers)
-			//timeToCipher = time.Now().Sub(findStartTime)
+			findStartTime := time.Now()
+			keyID, clientConn, err := findAccessKey(clientConn, *s.ciphers)
+			timeToCipher = time.Now().Sub(findStartTime)
 
 			if err != nil {
 				return onet.NewConnectionError("ERR_CIPHER", "Failed to find a valid cipher", err)
