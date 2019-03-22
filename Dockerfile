@@ -18,4 +18,4 @@ RUN go get -d -v ./... \
 
 ENV GIN_MODE=release
 
-CMD ["outline-ss-server", "-config", "/shadowbox/config.yml", "-cert", "/shadowbox/cert", "-key", "/shadowbox/key", "-verbose"]
+CMD ["outline-ss-server", "-config", "/shadowbox/config.yml", "-cert", "/shadowbox/cert", "-key", "/shadowbox/key"]
