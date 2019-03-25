@@ -56,9 +56,9 @@ func WrapConn(c DuplexConn, r io.Reader, w io.Writer) DuplexConn {
 func copyOneWay(leftConn, rightConn DuplexConn) (int64, error) {
 	n, err := io.Copy(leftConn, rightConn)
 	// Send FIN to indicate EOF
-	leftConn.CloseWrite()
+	leftConn.Close()
 	// Release reader resources
-	rightConn.CloseRead()
+	rightConn.Close()
 	return n, err
 }
 
