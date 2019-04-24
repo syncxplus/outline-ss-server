@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version = "1.1.9"
+	version = "1.1.10"
 	cipher  = "chacha20-ietf-poly1305"
 
 	passwordLen = 6
@@ -141,7 +141,7 @@ func Start(config, cert, key string) error {
 		return r.Run()
 	} else {
 		go r.Run()
-		logger.Infof("Start api with tls mode")
+		logger.Info("Start api with tls mode")
 		return r.RunTLS("", cert, key)
 	}
 }

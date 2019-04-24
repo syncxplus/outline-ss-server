@@ -20,6 +20,7 @@ import (
 	"io"
 	"net"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	logging "github.com/op/go-logging"
@@ -141,7 +142,7 @@ func proxyConnection(clientConn onet.DuplexConn, proxyMetrics *metrics.ProxyMetr
 	tgtTCPConn.SetKeepAlive(true)
 	tgtConn := metrics.MeasureConn(tgtTCPConn, &proxyMetrics.ProxyTarget, &proxyMetrics.TargetProxy)
 
-	logger.Debugf("proxy %s <-> %s, %s", clientConn.RemoteAddr().String(), tgtAddr.String(), tgtConn.RemoteAddr().String())
+	logger.Infof("proxy metrics: [tcp,%s,%s,%s]", clientConn.RemoteAddr().String(), tgtAddr.String(), tgtConn.RemoteAddr().String())
 	_, _, err = onet.Relay(clientConn, tgtConn)
 	if err != nil {
 		return onet.NewConnectionError("ERR_RELAY", "Failed to relay traffic", err)
@@ -166,7 +167,7 @@ func (s *tcpService) Start() {
 			if err != nil {
 				logger.Warningf("Failed location lookup: %v", err)
 			}
-			logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientConn.RemoteAddr().String())
+			logger.Infof("location metrics: [tcp,%s,%s]", clientConn.RemoteAddr().String(), clientLocation)
 			s.m.AddOpenTCPConnection(clientLocation)
 			defer func() {
 				if r := recover(); r != nil {
@@ -200,7 +201,8 @@ func (s *tcpService) Start() {
 			if err != nil {
 				return onet.NewConnectionError("ERR_CIPHER", "Failed to find a valid cipher", err)
 			} else {
-				s.m.AddClient(clientLocation)
+				client := strings.Split(clientConn.RemoteAddr().String(), ":")[0]
+				s.m.AddClient(client)
 			}
 
 			return proxyConnection(clientConn, &proxyMetrics)

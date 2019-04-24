@@ -117,7 +117,7 @@ func (s *udpService) Start() {
 			if locErr != nil {
 				logger.Warningf("Failed location lookup: %v", locErr)
 			}
-			logger.Debugf("Got location \"%v\" for IP %v", clientLocation, clientAddr.String())
+			logger.Infof("location metrics: [udp,%s,%s]", clientAddr.String(), clientLocation)
 			defer logger.Debugf("UDP done with %v", clientAddr.String())
 			logger.Debugf("UDP Request from %v with %v bytes", clientAddr, clientProxyBytes)
 			unpackStart := time.Now()
@@ -143,6 +143,7 @@ func (s *udpService) Start() {
 			if onet.IsPrivateAddress(tgtUDPAddr.IP) {
 				return onet.NewConnectionError("ERR_ADDRESS_PRIVATE", fmt.Sprintf("Target address is a private address: %v", tgtAddr.String()), nil)
 			}
+			logger.Infof("proxy metrics: [udp,%s,%s,%s]", clientAddr.String(), tgtAddr.String(), tgtUDPAddr.String())
 
 			payload := buf[len(tgtAddr):]
 
