@@ -44,7 +44,8 @@ func init() {
 		prefix = strings.Join([]string{"%{color}", prefix, "%{color:reset}"}, "")
 	}
 	logging.SetFormatter(logging.MustStringFormatter(strings.Join([]string{prefix, " %{message}"}, "")))
-	logging.SetBackend(logging.NewLogBackend(os.Stderr, "", 0))
+	logfile, _ := os.OpenFile("/tmp/server.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
+	logging.SetBackend(logging.NewLogBackend(os.Stderr, "", 0), logging.NewLogBackend(logfile, "", 0))
 	logger = logging.MustGetLogger("")
 }
 
