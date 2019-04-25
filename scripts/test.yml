@@ -1,10 +1,9 @@
-keys:
-- id: "0"
-  port: 10000
+- id: "test"
+  port: 53657
   cipher: chacha20-ietf-poly1305
-  secret: shadowbox
+  secret: werfjsd=9
   method: chacha20-ietf-poly1305
-  password: shadowbox
+  password: werfjsd=9
   rate: "0"
   name: ""
   accessurl: ""

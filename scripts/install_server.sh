@@ -4,9 +4,19 @@ DATA_DIR=${PWD}/shadowbox
 
 [[ ! -d "${DATA_DIR}" ]] && mkdir ${DATA_DIR}
 
-[[ ! -f "${DATA_DIR}/config.yml" ]] && {
-  curl -kL https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/scripts/config.yml -o ${DATA_DIR}/config.yml
+function addTest {
+  curl -kL https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/scripts/test.yml -o ${DATA_DIR}/test.yml
+  cat ${DATA_DIR}/test.yml >> ${DATA_DIR}/config.yml
+  rm -rf ${DATA_DIR}/test.yml
 }
+
+if [[ ! -f "${DATA_DIR}/config.yml" ]]; then
+  curl -kL https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/scripts/config.yml -o ${DATA_DIR}/config.yml
+  addTest
+else
+  port=`cat shadowbox/config.yml | grep 'port: 53657' | awk '{print $2}'`
+  [[ ${port} != '53657' ]] && addTest
+fi
 
 CERT=${DATA_DIR}/cert
 KEY=${DATA_DIR}/key
