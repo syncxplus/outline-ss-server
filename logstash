@@ -1,0 +1,14 @@
+FROM docker.elastic.co/logstash/logstash:6.5.4
+
+LABEL maintainer="jibo@outlook.com"
+
+RUN /usr/share/logstash/bin/logstash-plugin install logstash-input-journald
+
+COPY logstash.conf /logstash.conf
+
+COPY logstash.yml /usr/share/logstash/config/logstash.yml
+
+CMD ["logstash", "-f", "/logstash.conf"]
+
+# Build: docker build . -f logstash -t syncxplus/logstash:shadowbox2
+# Usage: docker run --name logstash --net host --restart=always --log-driver json-file --log-opt max-size=10m -v /var/log/journal:/var/log/journal -d -e HOST_IP=`curl -s checkip.amazonaws.com` -e ELASTIC_SEARCH_URL=http://54.146.25.16:9200 syncxplus/logstash:shadowbox2
