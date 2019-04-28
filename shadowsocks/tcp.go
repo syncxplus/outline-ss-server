@@ -118,7 +118,7 @@ type TCPService interface {
 }
 
 // proxyConnection will route the clientConn according to the address read from the connection.
-func proxyConnection(clientConn onet.DuplexConn, proxyMetrics *metrics.ProxyMetrics) *onet.ConnectionError {
+func proxyConnection(clientConn onet.DuplexConn, proxyMetrics *metrics.ProxyMetrics, clientLocation string) *onet.ConnectionError {
 	tgtAddr, err := socks.ReadAddr(clientConn)
 	if err != nil {
 		return onet.NewConnectionError("ERR_READ_ADDRESS", "Failed to get target address", err)
@@ -142,7 +142,9 @@ func proxyConnection(clientConn onet.DuplexConn, proxyMetrics *metrics.ProxyMetr
 	tgtTCPConn.SetKeepAlive(true)
 	tgtConn := metrics.MeasureConn(tgtTCPConn, &proxyMetrics.ProxyTarget, &proxyMetrics.TargetProxy)
 
-	logger.Infof("proxy metrics: [tcp,%s,%s,%s]", clientConn.RemoteAddr().String(), tgtAddr.String(), tgtConn.RemoteAddr().String())
+	if tgtAddr.String() != tgtConn.RemoteAddr().String() {
+		logger.Infof("ufo metrics: [%s,%s]", clientLocation, strings.Split(tgtAddr.String(), ":")[0])
+	}
 	_, _, err = onet.Relay(clientConn, tgtConn)
 	if err != nil {
 		return onet.NewConnectionError("ERR_RELAY", "Failed to relay traffic", err)
@@ -167,7 +169,6 @@ func (s *tcpService) Start() {
 			if err != nil {
 				logger.Warningf("Failed location lookup: %v", err)
 			}
-			logger.Infof("location metrics: [tcp,%s,%s]", clientConn.RemoteAddr().String(), clientLocation)
 			s.m.AddOpenTCPConnection(clientLocation)
 			defer func() {
 				if r := recover(); r != nil {
@@ -205,7 +206,7 @@ func (s *tcpService) Start() {
 				s.m.AddClient(client)
 			}
 
-			return proxyConnection(clientConn, &proxyMetrics)
+			return proxyConnection(clientConn, &proxyMetrics, clientLocation)
 		}()
 	}
 }

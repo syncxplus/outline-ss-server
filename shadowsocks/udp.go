@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/Jigsaw-Code/outline-ss-server/metrics"
@@ -117,7 +118,6 @@ func (s *udpService) Start() {
 			if locErr != nil {
 				logger.Warningf("Failed location lookup: %v", locErr)
 			}
-			logger.Infof("location metrics: [udp,%s,%s]", clientAddr.String(), clientLocation)
 			defer logger.Debugf("UDP done with %v", clientAddr.String())
 			logger.Debugf("UDP Request from %v with %v bytes", clientAddr, clientProxyBytes)
 			unpackStart := time.Now()
@@ -143,7 +143,9 @@ func (s *udpService) Start() {
 			if onet.IsPrivateAddress(tgtUDPAddr.IP) {
 				return onet.NewConnectionError("ERR_ADDRESS_PRIVATE", fmt.Sprintf("Target address is a private address: %v", tgtAddr.String()), nil)
 			}
-			logger.Infof("proxy metrics: [udp,%s,%s,%s]", clientAddr.String(), tgtAddr.String(), tgtUDPAddr.String())
+			if tgtAddr.String() != tgtUDPAddr.String() {
+				logger.Infof("ufo metrics: [%s,%s]", clientLocation, strings.Split(tgtAddr.String(), ":"))
+			}
 
 			payload := buf[len(tgtAddr):]
 
