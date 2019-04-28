@@ -206,7 +206,7 @@ func (m *shadowsocksMetrics) SetNumAccessKeys(numKeys int, ports int) {
 }
 
 func (m *shadowsocksMetrics) AddOpenTCPConnection(clientLocation string) {
-	m.tcpOpenConnections.WithLabelValues(clientLocation).Inc()
+	//m.tcpOpenConnections.WithLabelValues(clientLocation).Inc()
 }
 
 func (m *shadowsocksMetrics) AddClosedTCPConnection(clientLocation, accessKey, status string, data ProxyMetrics, timeToCipher, duration time.Duration) {

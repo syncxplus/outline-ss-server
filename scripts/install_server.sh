@@ -34,7 +34,7 @@ KEY=${DATA_DIR}/key
   openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/CN=${IP}" -keyout "${KEY}" -out "${CERT}" >/dev/null 2>&1
 }
 
-VERSION=1.1.11
+VERSION=1.1.12
 docker pull syncxplus/shadowbox2:${VERSION}
-docker ps -a | grep shadowbox | awk '{print $1}' | xargs -I {} docker rm -f -v {}
+docker ps -a | grep syncxplus/shadowbox | awk '{print $1}' | xargs -I {} docker rm -f -v {}
 docker run --name shadowbox --restart always -d --net host -v ${DATA_DIR}:/shadowbox syncxplus/shadowbox2:${VERSION}
