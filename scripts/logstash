@@ -1,0 +1,17 @@
+FROM docker.elastic.co/logstash/logstash:6.5.4
+
+LABEL maintainer="jibo@outlook.com"
+
+RUN /usr/share/logstash/bin/logstash-plugin install logstash-input-journald
+
+COPY logstash.conf /data/logstash.conf
+
+COPY logstash.yml /usr/share/logstash/config/logstash.yml
+
+CMD ["logstash", "-f", "/data/logstash.conf"]
+
+USER root
+
+RUN usermod -g root logstash
+
+USER logstash

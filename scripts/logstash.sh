@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+[[ ! -f "${PWD}/logstash/logstash.conf" ]] && mkdir ${PWD}/logstash;curl -L https://raw.githubusercontent.com/syncxplus/outline-ss-server/ufo/scripts/logstash.conf -o ${PWD}/logstash/logstash.conf;docker run -u root --rm -v ${PWD}/logstash:/data syncxplus/logstash:shadowbox2 chown -R logstash:logstash /data
+docker run --name logstash --net host --restart=always --log-driver json-file --log-opt max-size=10m -v ${PWD}/logstash:/data -v /var/log/journal:/var/log/journal -e HOST_IP=`curl -s checkip.amazonaws.com` -e ELASTIC_SEARCH_URL=http://54.146.25.16:9200 -d syncxplus/logstash:shadowbox2
